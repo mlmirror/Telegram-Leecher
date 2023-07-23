@@ -1,31 +1,33 @@
-# @title 🖥️ Main Colab Leech Code [ Click on RUN for Magic ✨ ]
+# @title 🖥️ Main Colab Leech Code
 
 # @title Main Code
-# @markdown <div><img src="https://user-images.githubusercontent.com/125879861/254280998-ee994ee1-183d-489f-b8ba-8bbf8998133b.png" height=40 align=left></img><h1><b>Colab Leecher Cell</b></h1></div>
+# @markdown <div><center><img src="https://user-images.githubusercontent.com/125879861/255391401-371f3a64-732d-4954-ac0f-4f093a6605e1.png" height=80></center></div>
 
+# @markdown <br>🖱️<i> Select The `Bot Mode` You want</i>
 MODE = "Leech"  # @param ["Leech", "Mirror", "Dir-Leech"]
 TYPE = "Normal"  # @param ["Normal", "Zip", "Unzip", "UnDoubleZip"]
 UPLOAD_MODE = "Media"  # @param ["Media", "Document"]
-# @markdown <i>✅ Tick The Below Checkbox If You Use `YouTube` or Other `Video Site Links`</i>
+# @markdown ✅<i> Tick The Below Checkbox If You Use `YouTube` or Other `Video Site Links`</i>
 YTDL_DOWNLOAD_MODE = False  # @param {type:"boolean"}
 
-# @markdown <h3><b>💢 Enter Below Fields 👇🏻 Only If You Are Mobile User 📱</b>
-SOURCE_LINK = "https://drive.google.com/file/d/14FU25CdY7-xa2kBLvFfmiYsgFdFxaIk-/view?usp=drive_link"  # @param {type: "string"}
+# @markdown <br>⌨️ <i>Enter Below Fields 👇🏻 Only If You Are `Mobile User` 📱</i>
+SOURCE_LINK = ""  # @param {type: "string"}
 CUSTOM_NAME = "DEFAULT"  # @param ["DEFAULT"] {allow-input: true}
 UNZIP_PASSWORD = "NO PASSWORD"  # @param ["NO PASSWORD"] {allow-input: true}
 
 
-import os, io, re, shutil, time, yt_dlp, math, pytz, psutil, threading, pickle, uvloop, pathlib, datetime, subprocess
+import os, io, re, shutil, time, yt_dlp, math, pytz, psutil, threading, uvloop, pathlib, datetime, subprocess
 from PIL import Image
 from pyrogram import Client
 from natsort import natsorted
+from google.colab import auth
 from google.colab import drive
 from urllib.parse import urlparse
 from re import search as re_search
 from os import makedirs, path as ospath
 from IPython.display import clear_output
-from urllib.parse import parse_qs, urlparse
 from googleapiclient.discovery import build
+from urllib.parse import parse_qs, urlparse
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
 from moviepy.video.io.VideoFileClip import VideoFileClip
@@ -77,7 +79,7 @@ def size_measure(size):
     return siz
 
 
-def get_file_type(file_path):
+def get_file_type(file_path: str):
     extensions_dict = {
         ".mp4": "video",
         ".avi": "video",
@@ -100,13 +102,9 @@ def get_file_type(file_path):
     _, extension = ospath.splitext(file_path)
 
     if extension.lower() in extensions_dict:
-        if extensions_dict[extension] == "video":
-            new_path = video_extension_fixer(file_path)
-        else:
-            new_path = file_path
-        return extensions_dict[extension], new_path
+        return extensions_dict[extension]
     else:
-        return "document", file_path
+        return "document"
 
 
 def shorterFileName(path):
@@ -150,9 +148,10 @@ def get_file_count(folder_path):
     return count
 
 
-def video_extension_fixer(file_path):
+def video_extension_fixer(file_path: str):
     _, f_name = ospath.split(file_path)
-    if f_name.endswith(".mp4") or f_name.endswith(".mkv"):
+    # if f_name.endswith(".mp4") or f_name.endswith(".mkv"):
+    if f_name.endswith(".mp4"):
         return file_path
     else:
         os.rename(file_path, ospath.join(file_path + ".mp4"))
@@ -700,8 +699,8 @@ def YouTubeDL(url):
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        if not ospath.exists(f"{d_path}/ytdl_thumbnails"):
-            makedirs(f"{d_path}/ytdl_thumbnails")
+        if not ospath.exists(thumbnail_ytdl):
+            makedirs(thumbnail_ytdl)
         try:
             info_dict = ydl.extract_info(url, download=False)
             ytdl_status[0] = "⌛ __Please WAIT a bit...__"
@@ -711,7 +710,7 @@ def YouTubeDL(url):
                     makedirs(ospath.join(d_fol_path, playlist_name))
                 ydl_opts["outtmpl"] = {
                     "default": f"{d_fol_path}/{playlist_name}/%(title)s.%(ext)s",
-                    "thumbnail": f"{d_path}/ytdl_thumbnails/%(title)s.%(ext)s",
+                    "thumbnail": f"{thumbnail_ytdl}/%(title)s.%(ext)s",
                 }
                 for entry in info_dict["entries"]:
                     video_url = entry["webpage_url"]
@@ -720,7 +719,7 @@ def YouTubeDL(url):
                 ytdl_status[0] = False
                 ydl_opts["outtmpl"] = {
                     "default": f"{d_fol_path}/%(title)s.%(ext)s",
-                    "thumbnail": f"{d_path}/ytdl_thumbnails/%(title)s.%(ext)s",
+                    "thumbnail": f"{thumbnail_ytdl}/%(title)s.%(ext)s",
                 }
                 ydl.download([url])
         except Exception as e:
@@ -809,16 +808,9 @@ async def get_d_name(link):
 
 
 def build_service():
-    # create credentials object from token.pickle file
-    creds = None
-    if ospath.exists("/content/token.pickle"):
-        with open("/content/token.pickle", "rb") as token:
-            creds = pickle.load(token)
-    else:
-        exit(1)
-
-    # create drive API client
-    service = build("drive", "v3", credentials=creds)
+    # create credentials object using colab auth
+    auth.authenticate_user()
+    service = build("drive", "v3")
 
     return service
 
@@ -852,7 +844,7 @@ def getFilesByFolderID(folder_id):
     files = []
     while True:
         response = (
-            service.files()
+            service.files()  # type: ignore
             .list(
                 supportsAllDrives=True,
                 includeItemsFromAllDrives=True,
@@ -874,7 +866,7 @@ def getFilesByFolderID(folder_id):
 
 def getFileMetadata(file_id):
     return (
-        service.files()
+        service.files()  # type: ignore
         .get(fileId=file_id, supportsAllDrives=True, fields="name, id, mimeType, size")
         .execute()
     )
@@ -884,7 +876,7 @@ def get_Gfolder_size(folder_id):
     try:
         query = "trashed = false and '{0}' in parents".format(folder_id)
         results = (
-            service.files()
+            service.files()  # type: ignore
             .list(
                 supportsAllDrives=True,
                 includeItemsFromAllDrives=True,
@@ -945,7 +937,7 @@ async def gDownloadFile(file_id, path):
                 file_contents = io.BytesIO()
 
                 # Download the file or folder contents to the BytesIO stream.
-                request = service.files().get_media(
+                request = service.files().get_media(  # type: ignore
                     fileId=file_id, supportsAllDrives=True
                 )
                 file_downloader = MediaIoBaseDownload(
@@ -1092,13 +1084,16 @@ async def upload_file(file_path, real_name):
     global sent
 
     caption = f"<code>{real_name}</code>"
-    type_, file_path = get_file_type(file_path)
+    type_ = get_file_type(file_path)
 
     f_type = type_ if UPLOAD_MODE == "Media" else "document"
 
     # Upload the file
     try:
         if f_type == "video":
+            # For Renaming to mp4
+            file_path = video_extension_fixer(file_path)
+            # Generate Thumbnail and Get Duration
             thmb_path, seconds = Thumbnail_Maintainer(file_path)
             with Image.open(thmb_path) as img:
                 width, height = img.size
@@ -1211,6 +1206,8 @@ async def Leech(folder_path: str, remove: bool):
             shutil.rmtree(temp_zpath)
 
         else:
+            if not remove:  # Copy To Temp Dir for Renaming Purposes
+                file_path = shutil.copy(file_path, temp_files_dir)
             file_name = ospath.basename(file_path)
             # Trimming filename upto 50 chars
             new_path = shorterFileName(file_path)
@@ -1227,17 +1224,23 @@ async def Leech(folder_path: str, remove: bool):
                 )
             except Exception as d:
                 print(d)
+            file_size = os.stat(new_path).st_size
             await upload_file(new_path, file_name)
-            up_bytes.append(os.stat(new_path).st_size)
+            up_bytes.append(file_size)
 
             if remove:
-                os.remove(new_path)
+                if ospath.exists(new_path):
+                    os.remove(new_path)
+            else:
+                for file in os.listdir(temp_files_dir):
+                    os.remove(ospath.join(temp_files_dir, file))
 
     if remove and ospath.exists(folder_path):
         shutil.rmtree(folder_path)
-
-    if ospath.exists(f"{d_path}/ytdl_thumbnails"):
-        shutil.rmtree(f"{d_path}/ytdl_thumbnails")
+    if ospath.exists(thumbnail_ytdl):
+        shutil.rmtree(thumbnail_ytdl)
+    if ospath.exists(temp_files_dir):
+        shutil.rmtree(temp_files_dir)
 
 
 async def Zip_Handler(d_fol_path: str, is_split: bool, remove: bool):
@@ -1382,7 +1385,7 @@ async def Do_Leech(source, is_dir, is_ytdl, is_zip, is_unzip, is_dualzip):
 
 
 async def Do_Mirror(source, is_ytdl, is_zip, is_unzip, is_dualzip):
-    global d_fol_path, msg, link_info, total_down_size, temp_zpath, temp_unzip_path
+    global d_fol_path, msg, link_info, total_down_size, temp_zpath, temp_unzip_path, mirror_dir
 
     try:
         if not ospath.exists("/content/drive"):
@@ -1433,19 +1436,20 @@ async def Do_Mirror(source, is_ytdl, is_zip, is_unzip, is_dualzip):
 
     cdt = datetime.datetime.now()
     cdt_ = cdt.strftime("Uploaded » %Y-%m-%d %H:%M:%S")
+    mirror_dir_ = ospath.join(mirror_dir, cdt_)
 
     if is_zip:
         await Zip_Handler(d_fol_path, True, True)
-        shutil.copytree(temp_zpath, ospath.join(mirror_dir, cdt_))
+        shutil.copytree(temp_zpath, mirror_dir_)
     elif is_unzip:
         await Unzip_Handler(d_fol_path, True)
-        shutil.copytree(temp_unzip_path, ospath.join(mirror_dir, cdt_))
+        shutil.copytree(temp_unzip_path, mirror_dir_)
     elif is_dualzip:
         await Unzip_Handler(d_fol_path, True)
         await Zip_Handler(temp_unzip_path, True, True)
-        shutil.copytree(temp_zpath, ospath.join(mirror_dir, cdt_))
+        shutil.copytree(temp_zpath, mirror_dir_)
     else:
-        shutil.copytree(d_fol_path, ospath.join(mirror_dir, cdt_))
+        shutil.copytree(d_fol_path, mirror_dir_)
 
     await FinalStep(msg, False)
 
@@ -1516,16 +1520,15 @@ async def FinalStep(msg, is_leech: bool):
 # ****************************************************************
 
 custom_thumb = "/content/Thumbnail.jpg"
-d_path = "/content/bot_Folder"
-d_name = ""
+d_path, d_name = "/content/bot_Folder", ""
 mirror_dir = "/content/drive/MyDrive/Colab Leecher Uploads"
 link_info = False
 d_fol_path = f"{d_path}/Downloads"
 temp_zpath = f"{d_path}/Leeched_Files"
 temp_unzip_path = f"{d_path}/Unzipped_Files"
-sent_file = []
-sent_fileName = []
-down_bytes = []
+temp_files_dir = f"{d_path}/dir_leech_temp"
+thumbnail_ytdl = f"{d_path}/ytdl_thumbnails"
+sent_file, sent_fileName, down_bytes = [], [], []
 down_bytes.append(0)
 ytdl_status = []
 ytdl_status.append("")
@@ -1539,11 +1542,16 @@ down_count = []
 down_count.append(1)
 start_time = datetime.datetime.now()
 link, z_pswd, text_msg = "something", "", ""
-sources = []
-is_dualzip, is_unzip, is_zip, is_ytdl, is_dir = False, False, False, False, False
+sources, service = [], None
+is_dualzip, is_unzip, is_zip, is_ytdl, is_dir = (
+    (TYPE == "UnDoubleZip"),
+    (TYPE == "Unzip"),
+    (TYPE == "Zip"),
+    YTDL_DOWNLOAD_MODE,
+    False,
+)
 
 try:
-    service = build_service()
     if not Thumbnail_Checker("/content"):
         thumb_path = "/content/Telegram-Leecher/custom_thmb.jpg"
         print("Didn't find thumbnail, So switching to default thumbnail")
@@ -1554,13 +1562,6 @@ try:
         makedirs(d_path)
     else:
         makedirs(d_path)
-
-    if TYPE == "UnDoubleZip":
-        is_dualzip = True
-    elif TYPE == "Zip":
-        is_zip = True
-    elif TYPE == "Unzip":
-        is_unzip = True
 
     is_ytdl = YTDL_DOWNLOAD_MODE
 
@@ -1585,7 +1586,9 @@ try:
     d_name, custom_name = "", ""
     # Making Sure, he is in Desktop
     if len(SOURCE_LINK) == 0 and CUSTOM_NAME == "DEFAULT":
-        if TYPE == "Zip" or (len(sources) == 1 and (MODE == "Mirror" or MODE == "Leech")):
+        if TYPE == "Zip" or (
+            len(sources) == 1 and (MODE == "Mirror" or MODE == "Leech")
+        ):
             custom_name = input("Enter Custom File name [ 'D' to set Default ]: ")
         else:
             print("Custom Name Not Applicable")
@@ -1601,6 +1604,8 @@ try:
     if MODE == "Dir-Leech":
         if not ospath.exists(sources[0]):
             raise ValueError(f"Directory Path is Invalid ! Provided: {sources[0]}")
+        if not os.path.exists(temp_files_dir):
+            makedirs(temp_files_dir)
         down_msg = f"<b>📤 UPLOADING » </b>\n"
         ida = "📂"
         is_dir = True
@@ -1610,6 +1615,7 @@ try:
             if "t.me" in link:
                 ida = "💬"
             elif "drive.google.com" in link:
+                service = build_service()
                 ida = "♻️"
             elif "magnet" in link or "torrent" in link:
                 ida = "🧲"
