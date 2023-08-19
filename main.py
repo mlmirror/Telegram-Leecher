@@ -3,25 +3,32 @@
 # @title Main Code
 # @markdown <div><center><img src="https://user-images.githubusercontent.com/125879861/255391401-371f3a64-732d-4954-ac0f-4f093a6605e1.png" height=80></center></div>
 
-# @markdown <br>🖱️<i> Select The `Bot Mode` You want</i>
+# @markdown <br><h3><b>🖱️ Select The `Bot Mode` You want</b></h3>
 MODE = "Leech"  # @param ["Leech", "Mirror", "Dir-Leech"]
 TYPE = "Normal"  # @param ["Normal", "Zip", "Unzip", "UnDoubleZip"]
 UPLOAD_MODE = "Media"  # @param ["Media", "Document"]
-# @markdown ✅<i> Tick The Below Checkbox If You Use `YouTube` or Other `Video Site Links`</i>
+# @markdown > <i>Media UPLOAD_MODE will upload files as `Streamable` on Telegram 
+
+# @markdown <br><h3><b>✅ Tick The Below Checkbox If You Use any `Video Site Links`</b></h3>
 YTDL_DOWNLOAD_MODE = False  # @param {type:"boolean"}
-# @markdown 🎥<i> Choose Options For  `Video Convertion`</i>
+# @markdown > <i>YouTube Links Are Auto Detected</i> 😉
+
+# @markdown <br><h3><b>🎥 Choose Options For `Video Converter` </b> </h3>
 CONVERT_VIDEOS = False  # @param {type:"boolean"}
+# @markdown > <i>If Enabled, it will convert any non-mp4 or mkv video file to mp4 or mkv</i>🎬
 OUT_FORMAT = "MP4"  # @param ["MP4", "MKV"]
 
-# @markdown 🚂 <i>Some Others `Options`</i>
+# @markdown <br><h3><b>🚂 Some Others `Options` </b></h3>
 ENABLE_CUSTOM_FILE_NAME = False  # @param {type:"boolean"}
+# @markdown > <i>Enable This to Rename Uploaded Files </i>✏️
 ENABLE_PASSWORD_SUPPORT = False  # @param {type:"boolean"}
+# @markdown > <i>Enable This to Unzip Encrypted Archives or Create Encrypted Archives</i> 🔐
 
-# @markdown <br>🖱️<i> Select The File `Caption Mode` You want</i>
+# @markdown <br><h3><b>🖱️ Select The File `Caption Mode` You want</b></h3>
 
 CAPTION = "Monospace"  # @param ["Regular", "Bold", "Italic", "Monospace", "Underlined"]
 PREFIX = ""  # @param {type: "string"}
-
+# @markdown > <i>Using Prefix is purely Optional</i> 🤷🏻‍♂️
 
 import os, io, re, shutil, time, yt_dlp, math, pytz, psutil, uvloop, pathlib, subprocess
 from PIL import Image
@@ -272,6 +279,15 @@ def thumbChecker():
             return True
     # No jpg file was found
     return False
+
+
+def isYtdlComplete():
+    for _d, _, filenames in os.walk(d_fol_path):
+        for f in filenames:
+            __, ext = ospath.splitext(f)
+            if ext in [".part", ".ytdl"]:
+                return False
+    return True
 
 
 def convertIMG(image_path):
@@ -1279,12 +1295,22 @@ async def upload_file(file_path, real_name):
 
 async def downloadManager(source, is_ytdl: bool):
     global link_info, msg
+    message = "\n<b>Please Wait...</b> ⏳\n<i>Merging YTDL Video...</i> 🐬"
     if is_ytdl:
         for i, link in enumerate(source):
             await YTDL_Status(link, i + 1)
-        time.sleep(5)  # Giving Time to Merge The Last Video
+        try:
+            await bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=msg.id,  # type: ignore
+                    text=task_msg + down_msg + message + sysINFO(),
+                    reply_markup=keyboard(),
+            )
+        except Exception:
+            pass
+        while not isYtdlComplete():
+            time.sleep(2)
     else:
-        # Downloading Files
         for i, link in enumerate(source):
             if "drive.google.com" in link:
                 await g_DownLoad(link, i + 1)
@@ -1292,7 +1318,17 @@ async def downloadManager(source, is_ytdl: bool):
                 await TelegramDownload(link, i + 1)
             elif "youtube.com" in link or "youtu.be" in link:
                 await YTDL_Status(link, i + 1)
-                time.sleep(5)  # Giving Time to Merge The Last Video
+                try:
+                    await bot.edit_message_text(
+                            chat_id=chat_id,
+                            message_id=msg.id,  # type: ignore
+                            text=task_msg + down_msg + message + sysINFO(),
+                            reply_markup=keyboard(),
+                    )
+                except Exception:
+                    pass
+                while not isYtdlComplete():
+                    time.sleep(2)
             else:
                 aria2_dn = f"<b>PLEASE WAIT ⌛</b>\n\n__Getting Download Info For__\n\n<code>{link}</code>"
                 try:
@@ -1810,26 +1846,31 @@ except Exception as e:
         + f"\n\n<i>⚠️ If You are Unknown with this **ERROR**, Then Forward This Message in [Colab Leecher Discussion](https://t.me/Colab_Leecher_Discuss) Where [Xron Trix](https://t.me/XronTrix) may fix it</i>"
     )
 
-    if msg:  # Ensuring That message was sent to Telegram
-        await bot.delete_messages(chat_id=chat_id, message_ids=msg.id)  # type: ignore
-        await bot.send_photo(  # type: ignore
-            chat_id=chat_id,  # type: ignore
-            photo=thumb_path,  # type: ignore
-            caption=task_msg + Error_Text,  # type: ignore
-            reply_markup=InlineKeyboardMarkup(
-                [
+    async with Client(  # type: ignore
+        "my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN  # type: ignore
+    ) as bot:
+        try:
+            await bot.delete_messages(chat_id=chat_id, message_ids=msg.id)  # type: ignore
+            await bot.send_photo(  # type: ignore
+                chat_id=chat_id,  # type: ignore
+                photo=thumb_path,  # type: ignore
+                caption=task_msg + Error_Text,  # type: ignore
+                reply_markup=InlineKeyboardMarkup(
                     [
-                        InlineKeyboardButton(  # Opens a web URL
-                            "Report Issue 🥺",
-                            url="https://github.com/XronTrix10/Telegram-Leecher/issues",
-                        ),
-                        InlineKeyboardButton(  # Opens a web URL
-                            "Group Discuss 🤔",
-                            url="https://t.me/Colab_Leecher_Discuss",
-                        ),
-                    ],
-                ]
-            ),
-        )
+                        [
+                            InlineKeyboardButton(  # Opens a web URL
+                                "Report Issue 🥺",
+                                url="https://github.com/XronTrix10/Telegram-Leecher/issues",
+                            ),
+                            InlineKeyboardButton(  # Opens a web URL
+                                "Group Discuss 🤔",
+                                url="https://t.me/Colab_Leecher_Discuss",
+                            ),
+                        ],
+                    ]
+                ),
+            )
+        except Exception:
+            pass
 
     print(f"Error Occured: {e}")
