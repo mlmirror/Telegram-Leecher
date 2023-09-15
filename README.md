@@ -2,34 +2,38 @@
 
 <br>
 
-<p align="center"><b>「 A Python Project to Transfer Files / Folders to Telegram and Google Drive with the help of Google Colab With Multi-Functionality 」</b></p>
+<p align="center"><strong>「 A Pyrogram based Telegram Bot to Transfer Files / Folders to Telegram and Google Drive with the help of Google Colab With Multi-Functionality 」</strong></p>
 
 <br>
 
 ## **📖 Click To Open The Notebook**
 
-<a href="https://colab.research.google.com/drive/12hdEqaidRZ8krqj7rpnyDzg1dkKmvdvp?usp=sharing" target="_parent"><img src="https://user-images.githubusercontent.com/125879861/255389999-a0d261cf-893a-46a7-9a3d-2bb52811b997.png" alt="Open In Colab" height=50px/></a>
+<a href="https://colab.research.google.com/drive/12hdEqaidRZ8krqj7rpnyDzg1dkKmvdvp?usp=sharing" target="_parent"><img src="https://user-images.githubusercontent.com/125879861/255389999-a0d261cf-893a-46a7-9a3d-2bb52811b997.png" alt="Open In Colab" width=200px/></a>
 
 
-## 🎓 **How To Use**
+## 🎓 **How To Deploy**
+
+<h3>Read <a href="https://github.com/XronTrix10/Telegram-Leecher/wiki/INSTRUCTIONS">INSTRUCTIONS</a></h3>
+
+<br>
+
+<h3>Watch YouTube Tutorial</h3>
 
 [![Watch It](https://img.youtube.com/vi/6LvYd-oO3U0/0.jpg)](https://www.youtube.com/watch?v=6LvYd-oO3U0)
 
 ## **💡 Features**
 
+- Easy To Use With Bot Commands ( Update 🔥 )
 - Powerful Video Converter, Convert Videos to mp4 / mkv ( New 🔥)
-- Get Restrricted Content From Telegram ( New 🔥)
-- Added Custom Name support 
+- Get Restrricted Content From Telegram ( Beta Stage )
+- Added Custom File Name Support 
 - Download Multiple Files or Folders from Multiple Links 
-- Added Support For All Type Archive Extraction 
-- Support for Multi-Part Archive Extraction
+- Support for Multi-Part Archive Extraction of all Type Extensions
 - Upload Directly From Colab Container
 - Auto Generate Thumbnail From Video Files 
 - Download Directly To Google Drive / Mirroring
 - Zip Folders/Files
-- Upload Files to Telegram
-- Shows Operation Status with bar and percentage
-- Split support for all files > 2000 MB
+- Split support for all files > 2GB/4GB
 
 ## **🔗 Supported Links**
 
@@ -46,8 +50,6 @@
 
 - No need of VPS or RDP
 - Immersive Network speed in Google Servers
-- Run Multiple Tasks in Multiple Colab Files at same time
-- Uploading to Telegram is way safer than Google Shared Drives
 - Unlimited Storage in Telegram
 - Upload Files of size upto 2000 MB
 - Premium Upload upto 4000 MB ( Coming Soon ♨️)
@@ -60,13 +62,10 @@
 
 - You need to be aware of Runtime Disconnections
 - Limited Disk Storage in Free Colab Account ~84 GB
-- Video Splitting is not supported yet
-- Links are only taken from Notebook. Bot Commands are not available till now
-<!-- - Which Limits the zip process of files size to ~41 GB
-- Have to manually upload config files ( token.pickle, thmb.jpg, etc ) -->
 
 ## **🚨 NOTE:**
 
+- Video Splitting is intentionally disabled to avoid video curruptions. Instead, they are zipped if they exceed MAX_UPLOAD_SIZE
 - Magnet or Torrent Links are supported, But avoid using, because `Google Colab Stricly Prohibits Torrents`
 - Downloading `YouTube Video without permission of the owner` can lead to copyright issues. Use with Caution
 
@@ -75,6 +74,11 @@
 <a href="https://t.me/Colab_Leecher" target="_parent"><img src="https://img.shields.io/badge/-Channel-blue?color=white&logo=telegram&logoColor=vlue"></a>
 
 <a href="https://t.me/Colab_Leecher_Discuss" target="_parent"><img src="https://img.shields.io/badge/-Group-blue?color=white&logo=telegram&logoColor=vlue"></a>
+
+
+## **⚖️ License**
+
+<h4><a href="https://github.com/XronTrix10/Telegram-Leecher/blob/main/LICENSE">GPL-3.0 license</a></h4>
 
 <br>
 
@@ -92,6 +96,8 @@
 
 <sub>Source: <a href="https://research.google.com/colaboratory/faq.html">Colab FAQ</a></sub>
 
-## _Please Leave a 🌟 If this repo helped you_
+<br>
 
-#### Pull Requests are welcome 💗
+<h3 align="center">Please Leave a 🌟 If this repo Helped you</h4>
+
+<h4 align="center">Pull Requests are welcome 💗</h4>
