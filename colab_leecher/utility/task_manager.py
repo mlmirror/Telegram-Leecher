@@ -49,6 +49,9 @@ async def taskScheduler():
     Transfer.sent_file_names = []
     Transfer.down_bytes = [0, 0]
     Transfer.up_bytes = [0, 0]
+    Messages.download_name = ""
+    Messages.task_msg = ""
+    Messages.status_head = f"<b>📥 DOWNLOADING » </b>\n"
 
     if is_dir:
         if not ospath.exists(BOT.SOURCE[0]):
@@ -68,8 +71,10 @@ async def taskScheduler():
             elif "drive.google.com" in link:
                 ida = "♻️"
             elif "magnet" in link or "torrent" in link:
-                ida = "🧲"
-                Messages.caution_msg = "\n\n⚠️<i><b> Torrents Are Strictly Prohibited in Google Colab</b>, Try to avoid Magnets !</i>"
+                await cancelTask(
+                    "<i><b>Sorry, But Torrents Are Strictly Prohibited in Google Colab</b>, I Can't allow you because it may shut down the whole project ! Please Find Any alternative Site !</i>"
+                )
+                return
             elif "youtube.com" in link or "youtu.be" in link:
                 ida = "🏮"
             else:
@@ -89,7 +94,7 @@ async def taskScheduler():
 
     if ospath.exists(Paths.WORK_PATH):
         shutil.rmtree(Paths.WORK_PATH)
-        makedirs(Paths.WORK_PATH)
+        # makedirs(Paths.WORK_PATH)
         makedirs(Paths.down_path)
     else:
         makedirs(Paths.WORK_PATH)
@@ -123,7 +128,11 @@ async def taskScheduler():
     )
 
     await calDownSize(BOT.SOURCE)
-    await get_d_name(BOT.SOURCE[0])
+
+    if not is_dir:
+        await get_d_name(BOT.SOURCE[0])
+    else:
+        Messages.download_name = ospath.basename(BOT.SOURCE[0])
 
     if is_zip:
         Paths.down_path = ospath.join(Paths.down_path, Messages.download_name)
@@ -132,7 +141,7 @@ async def taskScheduler():
 
     BotTimes.current_time = time()
 
-    if BOT.Mode.mode == "leech":
+    if BOT.Mode.mode != "mirror":
         await Do_Leech(BOT.SOURCE, is_dir, BOT.Mode.ytdl, is_zip, is_unzip, is_dualzip)
     else:
         await Do_Mirror(BOT.SOURCE, BOT.Mode.ytdl, is_zip, is_unzip, is_dualzip)
@@ -161,10 +170,10 @@ async def Do_Leech(source, is_dir, is_ytdl, is_zip, is_unzip, is_dualzip):
                     await Leech(Paths.down_path, False)
                 else:
                     Transfer.total_down_size = ospath.getsize(s)
-                    makedirs(f"{Paths.WORK_PATH}/tdjk")
-                    shutil.copy(s, f"{Paths.WORK_PATH}/tdjk")
+                    makedirs(Paths.temp_dirleech_path)
+                    shutil.copy(s, Paths.temp_dirleech_path)
                     Messages.download_name = ospath.basename(s)
-                    await Leech(f"{Paths.WORK_PATH}/tdjk", True)
+                    await Leech(Paths.temp_dirleech_path, True)
     else:
         await downloadManager(source, is_ytdl)
 

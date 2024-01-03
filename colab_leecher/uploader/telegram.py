@@ -3,15 +3,17 @@
 
 import logging
 from PIL import Image
+from asyncio import sleep
 from os import path as ospath
 from datetime import datetime
+from pyrogram.errors import FloodWait
 from colab_leecher.utility.variables import BOT, Transfer, BotTimes, Messages, MSG, Paths
 from colab_leecher.utility.helper import sizeUnit, fileType, getTime, status_bar, thumbMaintainer, videoExtFix
 
 async def progress_bar(current, total):
     global status_msg, status_head
     upload_speed = 4 * 1024 * 1024
-    elapsed_time_seconds = (datetime.now() - BotTimes.start_time).seconds
+    elapsed_time_seconds = (datetime.now() - BotTimes.task_start).seconds
     if current > 0 and elapsed_time_seconds > 0:
         upload_speed = current / elapsed_time_seconds
     eta = (Transfer.total_down_size - current - sum(Transfer.up_bytes)) / upload_speed
@@ -29,8 +31,8 @@ async def progress_bar(current, total):
 
 async def upload_file(file_path, real_name):
     global Transfer, MSG
-
-    caption = f"<{BOT.Options.caption}>{BOT.Setting.prefix} {real_name}</{BOT.Options.caption}>"
+    BotTimes.task_start = datetime.now()
+    caption = f"<{BOT.Options.caption}>{BOT.Setting.prefix} {real_name} {BOT.Setting.suffix}</{BOT.Options.caption}>"
     type_ = fileType(file_path)
 
     f_type = type_ if BOT.Options.stream_upload else "document"
@@ -95,5 +97,8 @@ async def upload_file(file_path, real_name):
         Transfer.sent_file.append(MSG.sent_msg)
         Transfer.sent_file_names.append(real_name)
 
+    except FloodWait as e:
+        await sleep(5)  # Wait 5 seconds before Trying Again
+        await upload_file(file_path, real_name)
     except Exception as e:
         logging.error(f"Error When Uploading : {e}")

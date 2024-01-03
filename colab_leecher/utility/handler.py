@@ -69,7 +69,6 @@ async def Leech(folder_path: str, remove: bool):
                 file_name = ospath.basename(short_path)
                 new_path = shortFileName(short_path)
                 os.rename(short_path, new_path)
-                BotTimes.task_start = datetime.now()
                 BotTimes.current_time = time()
                 Messages.status_head = f"<b>📤 UPLOADING SPLIT » {count} OF {len(dir_list)} Files</b>\n\n<code>{file_name}</code>\n"
                 try:
@@ -90,13 +89,15 @@ async def Leech(folder_path: str, remove: bool):
             shutil.rmtree(Paths.temp_zpath)
 
         else:
+            if not ospath.exists(Paths.temp_files_dir): # Create Directory
+                makedirs(Paths.temp_files_dir)
+
             if not remove:  # Copy To Temp Dir for Renaming Purposes
                 file_path = shutil.copy(file_path, Paths.temp_files_dir)
             file_name = ospath.basename(file_path)
             # Trimming filename upto 50 chars
             new_path = shortFileName(file_path)
             os.rename(file_path, new_path)
-            BotTimes.task_start = datetime.now()
             BotTimes.current_time = time()
             Messages.status_head = (
                 f"<b>📤 UPLOADING » </b>\n\n<code>{file_name}</code>\n"
@@ -147,7 +148,6 @@ async def Zip_Handler(down_path: str, is_split: bool, remove: bool):
 
     logging.info("\nNow ZIPPING the folder...")
     BotTimes.current_time = time()
-    BotTimes.task_start = datetime.now()
     if not ospath.exists(Paths.temp_zpath):
         makedirs(Paths.temp_zpath)
     await archive(down_path, is_split, remove)

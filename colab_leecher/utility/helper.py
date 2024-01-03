@@ -11,6 +11,7 @@ from os import path as ospath
 from datetime import datetime
 from urllib.parse import urlparse
 from asyncio import get_event_loop
+from pyrogram.errors import BadRequest
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from colab_leecher.utility.variables import (
@@ -68,7 +69,7 @@ def sizeUnit(size):
     elif size > 1024:
         siz = f"{size/1024:.2f} KiB"
     else:
-        siz = f"{size} B"
+        siz = f"{size:.2f} B"
     return siz
 
 
@@ -146,9 +147,8 @@ def videoExtFix(file_path: str):
 
 
 def thumbMaintainer(file_path):
-    thmb = f"{Paths.WORK_PATH}/video_frame.jpg"
-    if ospath.exists(thmb):
-        os.remove(thmb)
+    if ospath.exists(Paths.VIDEO_FRAME):
+        os.remove(Paths.VIDEO_FRAME)
     try:
         fname, _ = ospath.splitext(ospath.basename(file_path))
         ytdl_thmb = f"{Paths.WORK_PATH}/ytdl_thumbnails/{fname}.webp"
@@ -158,10 +158,12 @@ def thumbMaintainer(file_path):
             elif ospath.exists(ytdl_thmb):
                 return convertIMG(ytdl_thmb), video.duration
             else:
-                video.save_frame(thmb, t=math.floor(video.duration / 2))
-                return thmb, video.duration
+                video.save_frame(Paths.VIDEO_FRAME, t=math.floor(video.duration / 2))
+                return Paths.VIDEO_FRAME, video.duration
     except Exception as e:
         print(f"Thmb Gen ERROR: {e}")
+        if ospath.exists(Paths.THMB_PATH):
+            return Paths.THMB_PATH, 0
         return Paths.HERO_IMAGE, 0
 
 
@@ -180,7 +182,7 @@ async def setThumbnail(message):
             )
         return True
     except Exception as e:
-        BOT.Setting.thumbnail = True
+        BOT.Setting.thumbnail = False
         logging.info(f"Error Downloading Thumbnail: {e}")
         return False
 
@@ -264,6 +266,9 @@ def multipartArchive(path: str, type: str, remove: bool):
             na_p = name + ".z" + str(c).zfill(2)
             p_ap = ospath.join(dirname, na_p)
 
+        if rname.endswith(".zip"): # When the Archive was file.zip.001
+            rname, _ = ospath.splitext(rname)
+
     return rname, size
 
 
@@ -320,9 +325,11 @@ async def status_bar(down_msg, speed, percentage, eta, done, left, engine):
         if isTimeOver():
             await MSG.status_msg.edit_text(
                 text=Messages.task_msg + down_msg + text + sysINFO(),
+                disable_web_page_preview=True,
                 reply_markup=keyboard(),
             )
-
+    except BadRequest as e:
+        logging.error(f"Same Status Not Modified: {str(e)}")
     except Exception as e:
         # Catch any exceptions that might occur while editing the message.
         logging.error(f"Error Updating Status bar: {str(e)}")
